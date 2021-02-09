@@ -6,12 +6,15 @@ import cv2
 
 def image_prepare():
     original = cv2.imread('chestxray.jpg')
-    img2 = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+    # Convert the image to gray scale
+    grayImg = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+    # Use the gaussian / median filter in order to remove noise
+    blured = cv2.GaussianBlur(grayImg,(3,3),0)
     
-    thresValue, th = cv2.threshold(img2, 127, 255, cv2.THRESH_OTSU)
-    # cv2.imshow('Otsu Image' + self.title, img2)
-    image = cv2.Canny(th, 40, 90)
-    return image, original
+    _, th = cv2.threshold(blured, 127, 255, cv2.THRESH_OTSU)
+    cannyEdge = cv2.Canny(th, 40, 90)
+    
+    return cannyEdge, original
 
 
 def right_lung(src):
@@ -19,7 +22,7 @@ def right_lung(src):
     rad = (x**2 + y**2)**0.5
     tht = np.arctan2(y, x)
 
-    # first shape of the snake
+    # first shape of the snake as an elipse
     t = np.arange(0, 2*np.pi, 0.1)
     x = 500+100*np.cos(t)
     y = 450+280*np.sin(t)
@@ -43,7 +46,7 @@ def right_lung(src):
         n_iters = iterations,
         return_all = True
     )
-    return snakes
+    return snakes, x, y
 
 
 
@@ -76,24 +79,27 @@ def left_lung(src):
         n_iters = iterations,
         return_all = True
     )
-    return snakes
+    return snakes, x, y
     
 
 image, original_image = image_prepare()
-leftLungSeg = left_lung(image)
-rightLungSeg = right_lung(image)
+leftLungSeg, x_l, y_l = left_lung(image)
+rightLungSeg, x_r, y_r = right_lung(image)
 
 
 # plot images
 fig = plt.figure()
 ax  = fig.add_subplot(111)
+# Plot the original image
 ax.imshow(original_image, cmap=plt.cm.gray)
 
 ax.set_xticks([])
 ax.set_yticks([])
 ax.set_xlim(0,image.shape[1])
 ax.set_ylim(image.shape[0],0)
+# Draw the Lung Segmentations in red
 ax.plot(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]], np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]], c=(1,0,0), lw=2)
 ax.plot(np.r_[rightLungSeg[-1][0], rightLungSeg[-1][0][0]], np.r_[rightLungSeg[-1][1], rightLungSeg[-1][1][0]], c=(1,0,0), lw=2)
-
-
+# Draw the first snake shapes in green
+# ax.plot(np.r_[x_r,x_r[0]], np.r_[y_r,y_r[0]], c=(0,1,0), lw=2)
+# ax.plot(np.r_[x_l,x_l[0]], np.r_[y_l,y_l[0]], c=(0,1,0), lw=2)
