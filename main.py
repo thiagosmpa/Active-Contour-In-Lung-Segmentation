@@ -46,7 +46,7 @@ def right_lung(src):
         n_iters = iterations,
         return_all = True
     )
-    return snakes, x, y
+    return snakes
 
 
 
@@ -79,12 +79,12 @@ def left_lung(src):
         n_iters = iterations,
         return_all = True
     )
-    return snakes, x, y
+    return snakes
     
 
 image, original_image = image_prepare()
-leftLungSeg, x_l, y_l = left_lung(image)
-rightLungSeg, x_r, y_r = right_lung(image)
+leftLungSeg = left_lung(image)
+rightLungSeg = right_lung(image)
 
 
 # plot images
@@ -98,8 +98,19 @@ ax.set_yticks([])
 ax.set_xlim(0,image.shape[1])
 ax.set_ylim(image.shape[0],0)
 # Draw the Lung Segmentations in red
-ax.plot(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]], np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]], c=(1,0,0), lw=2)
-ax.plot(np.r_[rightLungSeg[-1][0], rightLungSeg[-1][0][0]], np.r_[rightLungSeg[-1][1], rightLungSeg[-1][1][0]], c=(1,0,0), lw=2)
+# ax.plot(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]], np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]], c=(1,0,0), lw=2)
+
+contourLeft_x = np.around(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]])
+contourLeft_y = np.around(np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]])
+# contourLeft = tuple(map(list, zip(contourLeft_y, contourLeft_x)))
+
+contourRight_x = np.r_[rightLungSeg[-1][0], rightLungSeg[-1][0][0]]
+contourRight_y = np.r_[rightLungSeg[-1][1], rightLungSeg[-1][1][0]]
+
+ax.plot(contourLeft_x, contourLeft_y, c=(1,0,0), lw=2)
+ax.plot(contourRight_x, contourRight_y, c=(1,0,0), lw=2)
+
 # Draw the first snake shapes in green
 # ax.plot(np.r_[x_r,x_r[0]], np.r_[y_r,y_r[0]], c=(0,1,0), lw=2)
 # ax.plot(np.r_[x_l,x_l[0]], np.r_[y_l,y_l[0]], c=(0,1,0), lw=2)
+
