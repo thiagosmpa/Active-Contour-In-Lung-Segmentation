@@ -6,6 +6,9 @@ import cv2
 
 def image_prepare():
     original = cv2.imread('chestxray.jpg')
+    
+    
+    
     # Convert the image to gray scale
     grayImg = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
     # Use the gaussian / median filter in order to remove noise
@@ -14,7 +17,9 @@ def image_prepare():
     _, th = cv2.threshold(blured, 127, 255, cv2.THRESH_OTSU)
     cannyEdge = cv2.Canny(th, 40, 90)
     
-    return cannyEdge, original
+    return cannyEdge, grayImg
+
+
 
 
 def right_lung(src):
@@ -46,6 +51,7 @@ def right_lung(src):
         n_iters = iterations,
         return_all = True
     )
+    
     return snakes
 
 
@@ -68,6 +74,8 @@ def left_lung(src):
     # fx and fy are callable functions
     fx, fy = sn.create_external_edge_force_gradients_from_img(src, sigma=10 )
     
+    
+    
     snakes = sn.iterate_snake(
         x = x,
         y = y,
@@ -79,12 +87,11 @@ def left_lung(src):
         n_iters = iterations,
         return_all = True
     )
+        
     return snakes
     
 
 image, original_image = image_prepare()
-leftLungSeg = left_lung(image)
-rightLungSeg = right_lung(image)
 
 
 # plot images
@@ -93,24 +100,30 @@ ax  = fig.add_subplot(111)
 # Plot the original image
 ax.imshow(original_image, cmap=plt.cm.gray)
 
+
+leftLungSeg = left_lung(image)
+rightLungSeg = right_lung(image)
+
+
 ax.set_xticks([])
 ax.set_yticks([])
-ax.set_xlim(0,image.shape[1])
-ax.set_ylim(image.shape[0],0)
-# Draw the Lung Segmentations in red
-# ax.plot(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]], np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]], c=(1,0,0), lw=2)
 
+
+# Plot the first left snake
+leftSnake = leftLungSeg[0]
+ax.plot(np.r_[leftSnake[0], leftSnake[0][0]], np.r_[leftSnake[1], leftSnake[1][0]], c=(0,0,1), lw=2)
+
+# Draw the Lung Segmentations in red
 contourLeft_x = np.around(np.r_[leftLungSeg[-1][0], leftLungSeg[-1][0][0]])
 contourLeft_y = np.around(np.r_[leftLungSeg[-1][1], leftLungSeg[-1][1][0]])
-# contourLeft = tuple(map(list, zip(contourLeft_y, contourLeft_x)))
+ax.plot(contourLeft_x, contourLeft_y, c=(1,0,0), lw=2)
 
+
+# Plot the first right snake
+rightSnake = rightLungSeg[0]
+ax.plot(np.r_[rightSnake[0], rightSnake[0][0]], np.r_[rightSnake[1], rightSnake[1][0]], c=(0,0,1), lw=2)
+
+# Draw the Lung Segmentations in red
 contourRight_x = np.r_[rightLungSeg[-1][0], rightLungSeg[-1][0][0]]
 contourRight_y = np.r_[rightLungSeg[-1][1], rightLungSeg[-1][1][0]]
-
-ax.plot(contourLeft_x, contourLeft_y, c=(1,0,0), lw=2)
 ax.plot(contourRight_x, contourRight_y, c=(1,0,0), lw=2)
-
-# Draw the first snake shapes in green
-# ax.plot(np.r_[x_r,x_r[0]], np.r_[y_r,y_r[0]], c=(0,1,0), lw=2)
-# ax.plot(np.r_[x_l,x_l[0]], np.r_[y_l,y_l[0]], c=(0,1,0), lw=2)
-
